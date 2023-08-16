@@ -28,7 +28,7 @@
 //         {name: 'fake thing 2', url: 'http://fakethings.com/2'},
 //       ],
 //     };
-//     this.setState({data, requestParams});
+//     this.setState({data, requestParams});//what does this do?this is the same as this.setState({data:data, requestParams:requestParams})
 //   }
 
 //   render() {
@@ -49,6 +49,7 @@
 
 
 import React, { useState } from 'react';
+import axios from 'axios';
 
 import './app.scss';
 
@@ -61,17 +62,39 @@ function App() {
   const [data, setData] = useState(null);
   const [requestParams, setRequestParams] = useState({});
 
-  const callApi = (requestParams) => {
-    // mock output
-    const newData = {
-      count: 2,
-      results: [
-        { name: 'fake thing 1', url: 'http://fakethings.com/1' },
-        { name: 'fake thing 2', url: 'http://fakethings.com/2' },
-      ],
-    };
-    setData(newData);
+  const callApi =async (requestParams) => {
+
     setRequestParams(requestParams);
+
+    if(requestParams.method==='GET'){
+      const response = await axios.get(requestParams.url);
+      setData(response.data);
+    }
+    if(requestParams.method==='POST'){
+      const response = await axios.post(requestParams.url);
+      setData(response.data);
+    }
+    if(requestParams.method==='PUT'){
+      const response = await axios.put(requestParams.url);
+      setData(response.data);
+    }
+    if(requestParams.method==='DELETE'){
+      const response = await axios.delete(requestParams.url);
+      setData(response.data);
+    }
+
+
+    // mock output
+    // const newData = {
+    //   count: 2,
+    //   results: [
+    //     { name: 'fake thing 1', url: 'http://fakethings.com/1' },
+    //     { name: 'fake thing 2', url: 'http://fakethings.com/2' },
+    //   ],
+    // };
+   
+    // setData(newData);
+    
   };
 
   return (
