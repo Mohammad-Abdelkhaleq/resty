@@ -50,6 +50,7 @@
 
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useEffect } from 'react';
 
 import './app.scss';
 
@@ -83,6 +84,13 @@ function App() {
       const response = await axios.delete(requestParams.url);
       setData(response.data);
     }
+
+    useEffect(() => {
+  
+      callApi(requestParams);
+      
+    }, [data]);
+
 
 
     // mock output
