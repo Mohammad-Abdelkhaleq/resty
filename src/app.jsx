@@ -48,9 +48,13 @@
 // export default App;
 
 
-import React, { useState } from 'react';
+import React, { useState, useReducer } from 'react';
 import axios from 'axios';
 import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Link } from 'react-router-dom';
+
+
 
 import './app.scss';
 
@@ -59,62 +63,110 @@ import Footer from './components/footer';
 import Form from './components/form';
 import Results from './components/results';
 import JSONView from 'react-json-view';
+import History from './components/history';
+
+const initialState = {
+  data: null,
+  requestParams: {},
+  previousRequestsHistory: [],
+}
+const reducer = (state, action) => {
+  switch (action.type) {
+    case 'UPDATE_REQUEST_PARAMS':
+      return { ...state, requestParams: action.payload };
+    case 'UPDATE_DATA':
+      return { ...state, data: action.payload };
+
+    case 'UPDATE_PREVIOUS_REQUESTS_HISTORY':
+      return { ...state, previousRequestsHistory: action.payload };  
+    default:
+      throw new Error();
+  }
+}
+
+function addToHistory(props) {
+
+
+
+}
+
 
 function App() {
-  const [data, setData] = useState(null);
-  const [requestParams, setRequestParams] = useState({});
+  // const [data, setData] = useState(null);
+  // const [requestParams, setRequestParams] = useState({});
 
-  const callApi =async (requestParams) => {
-
-    setRequestParams(requestParams);
-
-    if(requestParams.method==='GET'){
-      const response = await axios.get(requestParams.url);
-      setData(response.data);
-    }
-    if(requestParams.method==='POST'){
-      const response = await axios.post(requestParams.url);
-      setData(response.data);
-    }
-    if(requestParams.method==='PUT'){
-      const response = await axios.put(requestParams.url);
-      setData(response.data);
-    }
-    if(requestParams.method==='DELETE'){
-      const response = await axios.delete(requestParams.url);
-      setData(response.data);
-    }
-
-    useEffect(() => {
-  
-      callApi(requestParams);
-      
-    }, [data]);
+  const [state, dispatch] = useReducer(reducer, initialState);
 
 
-
-    // mock output
-    // const newData = {
-    //   count: 2,
-    //   results: [
-    //     { name: 'fake thing 1', url: 'http://fakethings.com/1' },
-    //     { name: 'fake thing 2', url: 'http://fakethings.com/2' },
-    //   ],
-    // };
-   
-    // setData(newData);
-    
+  const callApi = async (requestParams) => {
+    dispatch({ type: 'UPDATE_REQUEST_PARAMS', payload: requestParams });
   };
 
+  const updateHistory = (newApiCall) => {
+    state.previousRequestsHistory.push(newApiCall);
+    dispatch({ type: 'UPDATE_PREVIOUS_REQUESTS_HISTORY', payload: state.previousRequestsHistory });
+  };
+  
+  useEffect(() => {
+    if (state.requestParams.method) {
+      const fetchData = async () => {
+        try {
+          let response;
+  
+          if (state.requestParams.method === 'GET') {
+            response = await axios.get(state.requestParams.url);
+          } else if (state.requestParams.method === 'POST') {
+            response = await axios.post(state.requestParams.url);
+          } else if (state.requestParams.method === 'PUT') {
+            response = await axios.put(state.requestParams.url);
+          } else if (state.requestParams.method === 'DELETE') {
+            response = await axios.delete(state.requestParams.url);
+          }
+  
+          dispatch({ type: 'UPDATE_DATA', payload: response.data });
+        } catch (error) {
+          // Handle error here
+        }
+      };
+  
+      fetchData();
+    }
+
+    updateHistory(state.requestParams);
+
+
+  }, [state.requestParams]);
+
+
+  useEffect(() => {
+  
+    callApi(state.requestParams);
+    
+  }, [state.data]);
   return (
     <>
-      <Header />
-      <div>Request Method: {requestParams.method}</div>
-      <div>URL: {requestParams.url}</div>
+
+
+
+<Header />
+      <div>Request Method: {state.requestParams.method}</div>
+      <div>URL: {state.requestParams.url}</div>
       <Form handleApiCall={callApi} />
+
+      <Routes>
+      {state.data&&<Route path="/" element={<JSONView src={state.data} theme="rjv-default" />} />}
       {/* <Results  src={jsonData} theme="rjv-default"  data={data}/> */}
-      {data&&<JSONView src={data} theme="rjv-default" />}
+      <Route path="/history" element={<History  prevApiCalls={state.previousRequestsHistory}   />} />
+      
+      </Routes>
+
+      {/* <Results  src={jsonData} theme="rjv-default"  data={data}/> */}
+      {/* {state.data&&<JSONView src={state.data} theme="rjv-default" />} */}
       <Footer />
+
+
+
+
     </>
   );
 }
