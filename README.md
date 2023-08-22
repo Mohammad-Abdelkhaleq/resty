@@ -11,3 +11,7 @@ Currently, two official plugins are available:
 
 
 ![Alt text](image.png)
+
+# the history component 
+
+![Alt text](image-1.png)
